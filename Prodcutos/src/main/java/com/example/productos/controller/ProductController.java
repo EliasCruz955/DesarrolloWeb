@@ -1,11 +1,15 @@
 package com.example.productos.controller;
 
+import com.example.productos.dto.ProductRequest;
+import com.example.productos.dto.ProductResponse;
 import com.example.productos.model.Product;
 import com.example.productos.service.ProductService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,29 +24,37 @@ public class ProductController {
     }
 
     @GetMapping()
-    public ResponseEntity<List<Product>> findAll(){
-        return ResponseEntity.ok(service.getAll());
+    public ResponseEntity<List<ProductResponse>> findAll(){
+        List<ProductResponse> listResponse = new ArrayList<>();
+        for (Product p: service.getAll()){
+            listResponse.add(toResponse(p));
+        }
+        return ResponseEntity.ok(listResponse);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getById(@PathVariable Long id){
+    public ResponseEntity<ProductResponse> getById(@PathVariable Long id){
         Optional<Product> product = service.findById(id);
+
         if(!product.isEmpty()){
-            return ResponseEntity.ok(product.get());
+            return ResponseEntity.ok(toResponse(product.get()));
         }else {
             return ResponseEntity.notFound().build();
         }
     }
 
     @PostMapping()
-    public ResponseEntity<Product> save(@RequestBody Product product){
-        service.save(product);
+    public ResponseEntity<ProductResponse> save(@Valid @RequestBody ProductRequest product){
+        if (product.name().isEmpty()){
+            ResponseEntity.badRequest().body("error");
+        }
+        Product productSaved = service.save(toEntity(product));
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(product);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(productSaved));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Product> delete(@PathVariable Long id){
+    public ResponseEntity<Void> delete(@PathVariable Long id){
         boolean deleted = service.delete(id);
         if (deleted){
             return ResponseEntity.noContent().build();
@@ -51,11 +63,24 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Product> update(@PathVariable Long id, @RequestBody Product product){
-        Optional<Product> optional = service.update(id, product);
+    public ResponseEntity<ProductResponse> update(@PathVariable Long id,@Valid @RequestBody ProductRequest product){
+        Optional<Product> optional = service.update(id, toEntity(product));
         if(optional.isPresent()){
-            return ResponseEntity.status(HttpStatus.CREATED).body(optional.get());
+            return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(optional.get()));
         }
         return ResponseEntity.notFound().build();
+    }
+
+    private ProductResponse toResponse (Product product){
+        return new ProductResponse(product.getId(), product.getName(), product.getPrice(), product.getStock());
+    }
+
+    private Product toEntity(ProductRequest request){
+        Product product = new Product();
+        product.setName(request.name());
+        product.setPrice(request.price());
+        product.setStock(request.stock());
+
+        return product;
     }
 }
