@@ -6,11 +6,10 @@ import jakarta.validation.constraints.PositiveOrZero;
 
 public record ProductResponse(
         Long id,
-        @NotBlank
         String name,
-        @Positive
         Double price,
-        @PositiveOrZero
-        int stock
+        int stock,
+        Long categoryId,
+        String categoryName
 ) {
 }

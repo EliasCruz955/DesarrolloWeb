@@ -14,7 +14,9 @@ public record ProductRequest(
         Double price,
         @NotNull
         @PositiveOrZero
-        Integer stock
+        Integer stock,
+        @NotNull
+        Long categoryId
 ) {
 
 }
