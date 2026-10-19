@@ -17,7 +17,7 @@ import java.util.Optional;
 @RequestMapping("/products")
 public class ProductController {
 
-    private ProductService service;
+    private final ProductService service;
 
     public ProductController(ProductService service){
         this.service = service;
@@ -64,7 +64,11 @@ public class ProductController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ProductResponse> update(@PathVariable Long id,@Valid @RequestBody ProductRequest product){
-        Optional<Product> optional = service.update(id, toEntity(product));
+        Optional<Product> optional = service.update(
+                id,
+                toEntity(product),
+                product.categoryId()
+        );
         if(optional.isPresent()){
             return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(optional.get()));
         }

@@ -1,5 +1,6 @@
 package com.example.productos.service;
 
+import com.example.productos.exception.ResourceNotFoundException;
 import com.example.productos.model.Category;
 import com.example.productos.model.Product;
 import com.example.productos.repository.CategoryRepository;
@@ -28,23 +29,32 @@ public class ProductService {
     }
 
     public Product save(Product product, Long categoryId){
-        Category category = repoCategory.findById(categoryId).orElseThrow();
+        Category category = repoCategory.findById(categoryId).
+                orElseThrow(
+                ()->
+                        new ResourceNotFoundException("Category not found with id: " + categoryId)
+        );
         product.setCategory(category);
         return repo.save(product);
 
     }
 
-    public Optional<Product> update(Long id, Product product){
-        Optional<Product> optional = repo.findById(id);
-        if (optional.isEmpty()){
-            return optional.empty();
-        }
-        Product productDB = optional.get();
+    public Optional<Product> update(Long id, Product product, Long categoryId){
+
+        Product productDB = repo.findById(id).orElseThrow(
+                ()->
+                        new ResourceNotFoundException("Product not found with id: " + id)
+        );
+        Category category = repoCategory.findById(categoryId).orElseThrow(
+                ()->
+                new ResourceNotFoundException("Category not found with id: " + categoryId)
+        );
+        //Product productDB = optional.get();
 
         productDB.setName(product.getName());
         productDB.setPrice(product.getPrice());
         productDB.setStock(product.getStock());
-
+        productDB.setCategory(category);
         return Optional.of(repo.save(productDB));
     }
 
