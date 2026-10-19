@@ -2,6 +2,9 @@ package com.example.productos.controller;
 
 import com.example.productos.dto.ProductRequest;
 import com.example.productos.dto.ProductResponse;
+import com.example.productos.dto.StockRequest;
+import com.example.productos.dto.StockResponse;
+import com.example.productos.exception.ResourceNotFoundException;
 import com.example.productos.model.Product;
 import com.example.productos.service.ProductService;
 import jakarta.validation.Valid;
@@ -23,6 +26,17 @@ public class ProductController {
         this.service = service;
     }
 
+    @PatchMapping("/{id}")
+    public ResponseEntity<StockResponse> changeProductStock(String word, @PathVariable Long id, @Valid @RequestBody StockRequest stockRequest){
+        Product changedProduct = service.changeProductStock(
+                stockRequest.word(),
+                id,
+                stockRequest.cantidad()
+        );
+
+        return ResponseEntity.ok(toResponseStock(stockRequest));
+    }
+
     @GetMapping()
     public ResponseEntity<List<ProductResponse>> findAll(){
         List<ProductResponse> listResponse = new ArrayList<>();
@@ -33,14 +47,13 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductResponse> getById(@PathVariable Long id){
-        Optional<Product> product = service.findById(id);
+    public ResponseEntity<ProductResponse> findById(@PathVariable Long id){
+        Product product = service.findById(id).orElseThrow(
+                ()->
+                        new ResourceNotFoundException("Product not found with id: " + id)
+        );
 
-        if(!product.isEmpty()){
-            return ResponseEntity.ok(toResponse(product.get()));
-        }else {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(toResponse(product));
     }
 
     @PostMapping()
@@ -64,19 +77,17 @@ public class ProductController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ProductResponse> update(@PathVariable Long id,@Valid @RequestBody ProductRequest product){
-        Optional<Product> optional = service.update(
+        Product productService = service.update(
                 id,
                 toEntity(product),
                 product.categoryId()
         );
-        if(optional.isPresent()){
-            return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(optional.get()));
-        }
-        return ResponseEntity.notFound().build();
+
+        return ResponseEntity.ok(toResponse(productService));
     }
 
     private ProductResponse toResponse (Product product){
-        return new ProductResponse(product.getId(), product.getName(), product.getPrice(), product.getStock(), 0L, "");
+        return new ProductResponse(product.getId(), product.getName(), product.getPrice(), product.getStock(), product.getCategory().getId(), product.getCategory().getName());
     }
 
     private Product toEntity(ProductRequest request){
@@ -86,5 +97,9 @@ public class ProductController {
         product.setStock(request.stock());
 
         return product;
+    }
+
+    private StockResponse toResponseStock (StockRequest stock){
+        return new StockResponse(stock.word(), stock.cantidad());
     }
 }

@@ -1,10 +1,13 @@
 package com.example.productos.service;
 
+import com.example.productos.exception.ResourceConflictException;
 import com.example.productos.exception.ResourceNotFoundException;
 import com.example.productos.model.Category;
 import com.example.productos.model.Product;
 import com.example.productos.repository.CategoryRepository;
 import com.example.productos.repository.ProductRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,6 +22,30 @@ public class ProductService {
         this.repo = repo;
         this.repoCategory = repoCategory;
     }
+
+    public Product changeProductStock(String word, Long id, int cantidad){
+        Product productDB = repo.findById(id).orElseThrow(
+                ()->
+                        new ResourceNotFoundException("Product not found with id: " + id)
+        );
+        if (word.equals("add")){
+            productDB.setStock(productDB.getStock() + cantidad);
+            repo.save(productDB);
+        }else if (word.equals("remove")){
+
+            if (productDB.getStock() > cantidad){
+                productDB.setStock(productDB.getStock() - cantidad);
+                repo.save(productDB);
+            }else {
+                throw new ResourceConflictException("Stock insuficiente");
+            }
+        }else {
+            throw new ResourceConflictException("Palabra incorrecta");
+        }
+        return productDB;
+    }
+
+
 
     public List<Product> getAll(){
         return repo.findAll();
@@ -39,7 +66,7 @@ public class ProductService {
 
     }
 
-    public Optional<Product> update(Long id, Product product, Long categoryId){
+    public Product update(Long id, Product product, Long categoryId){
 
         Product productDB = repo.findById(id).orElseThrow(
                 ()->
@@ -55,7 +82,7 @@ public class ProductService {
         productDB.setPrice(product.getPrice());
         productDB.setStock(product.getStock());
         productDB.setCategory(category);
-        return Optional.of(repo.save(productDB));
+        return repo.save(productDB);
     }
 
     public boolean delete(Long id){
