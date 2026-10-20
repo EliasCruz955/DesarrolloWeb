@@ -27,14 +27,14 @@ public class ProductController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<StockResponse> changeProductStock(String word, @PathVariable Long id, @Valid @RequestBody StockRequest stockRequest){
+    public ResponseEntity<StockResponse> changeProductStock( @PathVariable Long id, @Valid @RequestBody StockRequest stockRequest){
         Product changedProduct = service.changeProductStock(
                 stockRequest.word(),
                 id,
                 stockRequest.cantidad()
         );
 
-        return ResponseEntity.ok(toResponseStock(stockRequest));
+        return ResponseEntity.ok(toStockResponse(changedProduct, stockRequest.word()));
     }
 
     @GetMapping()
@@ -99,7 +99,7 @@ public class ProductController {
         return product;
     }
 
-    private StockResponse toResponseStock (StockRequest stock){
-        return new StockResponse(stock.word(), stock.cantidad());
+    private StockResponse toStockResponse(Product product, String word){
+        return new StockResponse(word, product.getStock());
     }
 }
