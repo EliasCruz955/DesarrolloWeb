@@ -45,7 +45,7 @@ public class CategoryController {
 
     @PostMapping()
     public ResponseEntity<CategoryResponse> save(@Valid @RequestBody CategoryRequest category){
-        if (category.name().isEmpty()){
+        if (category.getName().isEmpty()){
             ResponseEntity.badRequest().body("error");
         }
         Category categorySaved = service.save(toEntity(category));
@@ -64,23 +64,22 @@ public class CategoryController {
 
     @PutMapping("/{id}")
     public ResponseEntity<CategoryResponse> update(@PathVariable Long id,@Valid @RequestBody CategoryRequest category){
-        Optional<Category> optional = service.update(
+        Category optional = service.update(
                 id,
                 toEntity(category)
         );
-        if(optional.isPresent()){
-            return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(optional.get()));
-        }
+
         return ResponseEntity.notFound().build();
     }
 
     private CategoryResponse toResponse (Category category){
-        return new CategoryResponse(category.getId(), category.getName());
+        return new CategoryResponse(category.getId(), category.getName(), category.getActive());
     }
 
     private Category toEntity(CategoryRequest request){
         Category category = new Category();
-        category.setName(request.name());
+        category.setName(request.getName());
+        category.setActive(request.getActive());
 
         return category;
     }

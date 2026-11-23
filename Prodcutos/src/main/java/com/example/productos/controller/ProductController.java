@@ -58,9 +58,6 @@ public class ProductController {
 
     @PostMapping()
     public ResponseEntity<ProductResponse> save(@Valid @RequestBody ProductRequest product){
-        if (product.name().isEmpty()){
-            ResponseEntity.badRequest().body("error");
-        }
         Product productSaved = service.save(toEntity(product), product.categoryId());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(productSaved));

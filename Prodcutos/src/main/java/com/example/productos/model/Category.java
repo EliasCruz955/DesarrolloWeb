@@ -11,13 +11,26 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    public Category(Long id, String name) {
+    public Category(Long id, String name, Boolean active) {
         this.id = id;
         this.name = name;
+        this.active = active;
     }
 
     public Category(){
 
+    }
+
+    private Boolean active = true;
+
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        if (active != null){
+            this.active = active;
+        }
     }
 
     public Long getId() {

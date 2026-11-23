@@ -28,7 +28,7 @@ public class CategoryService {
         return repo.save(category);
     }
 
-    public Optional<Category> update(Long id, Category category){
+    public Category update(Long id, Category category){
 
         Category categoryDB = repo.findById(id).orElseThrow(
                 ()->
@@ -37,7 +37,7 @@ public class CategoryService {
         //Product productDB = optional.get();
 
         categoryDB.setName(category.getName());
-        return Optional.of(repo.save(categoryDB));
+        return repo.save(categoryDB);
     }
 
     public boolean delete(Long id){
